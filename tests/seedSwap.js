@@ -435,29 +435,29 @@ contract('SeedSwap', accounts => {
 
     const deployAndInitData = async function() {
       let currentTime = new BN(await Helper.currentBlockTime());
-        seedSwap = await MockTestSeedSwap.new(
-          owner,
-          teaToken.address,
-          currentTime.add(new BN(20)),  // start
-          currentTime.add(new BN(100)), // end
-          new BN(10).pow(new BN(18)),   // hard cap
-          new BN(10).pow(new BN(18)),   // user's cap
-          { from: deployer }
-        );
-        // add all users as whitelisted admin and users
-        await seedSwap.updateWhitelistedAdmins(accounts, true, { from: owner });
-        await seedSwap.updateWhitelistedUsers(accounts, true, { from: owner });
-        await delayToStartTime();
-        userData = {}
-        swapObjects = [];
-        currentEthSwapped = new BN(0);
-        currentTokenSwapped = new BN(0);
-        totalDistributed = new BN(0);
-        userTokenBalances = {};
-        for(let i = 0; i < accounts.length; i++) {
-          userTokenBalances[accounts[i]] = await teaToken.balanceOf(accounts[i]);
-          userData[accounts[i]] = generateUserObject();
-        }
+      seedSwap = await MockTestSeedSwap.new(
+        owner,
+        teaToken.address,
+        currentTime.add(new BN(20)),  // start
+        currentTime.add(new BN(100)), // end
+        new BN(10).pow(new BN(18)),   // hard cap
+        new BN(10).pow(new BN(18)),   // user's cap
+        { from: deployer }
+      );
+      // add all users as whitelisted admin and users
+      await seedSwap.updateWhitelistedAdmins(accounts, true, { from: owner });
+      await seedSwap.updateWhitelistedUsers(accounts, true, { from: owner });
+      await delayToStartTime();
+      userData = {}
+      swapObjects = [];
+      currentEthSwapped = new BN(0);
+      currentTokenSwapped = new BN(0);
+      totalDistributed = new BN(0);
+      userTokenBalances = {};
+      for(let i = 0; i < accounts.length; i++) {
+        userTokenBalances[accounts[i]] = await teaToken.balanceOf(accounts[i]);
+        userData[accounts[i]] = generateUserObject();
+      }
     }
 
     describe(`Test distribute`, async() => {
@@ -738,6 +738,51 @@ contract('SeedSwap', accounts => {
         )
         await seedSwap.distributeBatch(51, [1], { from: admin });
         await seedSwap.distributeBatch(50, [0], { from: admin });
+      });
+
+      it.only(`Test max number swaps`, async() => {
+        let currentTime = new BN(await Helper.currentBlockTime());
+        seedSwap = await MockTestSeedSwap.new(
+          owner,
+          teaToken.address,
+          currentTime.add(new BN(20)),  // start
+          currentTime.add(new BN(1000)), // end
+          new BN(10).pow(new BN(30)),   // hard cap
+          new BN(10).pow(new BN(30)),   // user's cap
+          { from: deployer }
+        );
+        // add all users as whitelisted admin and users
+        await seedSwap.updateWhitelistedAdmins(accounts, true, { from: owner });
+        await seedSwap.updateWhitelistedUsers(accounts, true, { from: owner });
+        await delayToStartTime();
+
+        let numLoops = 400;
+        let safeNumbers = 150;
+        let batches = [];
+        for(let i = 0; i < numLoops; i++) {
+          await seedSwap.swapEthToToken({
+            value: new BN(10).pow(new BN(18)),
+            from: accounts[i % accounts.length]
+          });
+        }
+        for(let i = 0; i < safeNumbers; i++) {
+          batches.push(i);
+        }
+
+        // test get all swaps
+        let data = await seedSwap.getAllSwaps();
+        Helper.assertEqual(data.users.length, numLoops);
+
+        await delayToEndTime();
+        // transfer enough token
+        await teaToken.transfer(
+          seedSwap.address,
+          await seedSwap.totalSwappedToken(),
+          { from: owner }
+        );
+        // test distribute safeNumbers orders
+        let tx = await seedSwap.distributeBatch(50, batches, { from: owner });
+        console.log(`Distributed ${safeNumbers} orders, gas used: ${tx.receipt.gasUsed}`);
       });
     });
 
