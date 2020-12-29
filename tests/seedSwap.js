@@ -740,7 +740,7 @@ contract('SeedSwap', accounts => {
         await seedSwap.distributeBatch(50, [0], { from: admin });
       });
 
-      it.only(`Test max number swaps`, async() => {
+      it(`Test max number swaps`, async() => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,

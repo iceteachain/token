@@ -7,10 +7,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "./tst.sh",
-    "t": "./tst.sh",
-    "compile": "./cmp.sh",
-    "c": "./cmp.sh",
+    "test": "./test.sh",
+    "t": "./test.sh",
+    "compile": "./compile.sh",
+    "c": "./compile.sh",
     "prettier": "./node_modules/.bin/prettier --write"
   },
   "repository": {

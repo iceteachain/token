@@ -168,6 +168,12 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             _addWhitelistAdmin(_owner);
             transferOwnership(_owner);
         }
+
+        saleStartTime = block.timestamp;
+        saleEndTime = block.timestamp + 2 hours;
+        HARD_CAP = 2 ether;
+        MIN_INDIVIDUAL_CAP = 1 ether / 100;
+        MAX_INDIVIDUAL_CAP = 1 ether;
     }
 
     function () external payable {
