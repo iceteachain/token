@@ -102,7 +102,7 @@ Only can call distribute after sale is ended and it is not paused.
 - Owner can withdraw eth or any token at any time.
 
 ### Emergency user withdraw token
-- `emergencyUserWithdrawToken()`
+- `selfWithdrawToken()`
 - User can withdraw TEA token after `WITHDRAWAL_DEADLINE` from `saleEndTime`.
 - All undistributed tokens will be transferred to user.
 

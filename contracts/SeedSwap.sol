@@ -54,6 +54,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
     SwapData[] public listSwaps;
 
     struct UserSwapData {
+        address tokenRecipient; // default is user's address, can change by owner
         uint128 eAmount;
         uint128 tAmount;
         uint128 dAmount;
@@ -78,12 +79,14 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
     event UpdateEthRecipient(address indexed newRecipient);
     event Distributed(
         address indexed user,
+        address indexed recipient,
         uint256 dAmount,
         uint256 indexed percentage,
-        uint256 indexed timestamp
+        uint256 timestamp
     );
-    event EmergencyUserWithdrawToken(
+    event SelfWithdrawToken(
         address indexed sender,
+        address indexed recipient,
         uint256 indexed dAmount,
         uint256 timestamp
     );
@@ -91,6 +94,10 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
         address indexed sender,
         IERC20 indexed token,
         uint256 amount
+    );
+    event UpdatedTokenRecipient(
+        address user,
+        address recipient
     );
 
     modifier whenNotStarted() {
@@ -290,7 +297,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
     /// @dev in case after WITHDRAWAL_DEADLINE from end sale time
     /// user can call this function to claim all of their tokens
     /// also update user's swap records
-    function emergencyUserWithdrawToken() external returns (uint256 tokenAmount) {
+    function selfWithdrawToken() external returns (uint256 tokenAmount) {
         require(
             block.timestamp > WITHDRAWAL_DEADLINE + saleEndTime,
             "Emergency: not open for emergency withdrawal"
@@ -314,8 +321,8 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
         }
         totalDistributedToken = totalDistributedToken.add(tokenAmount);
         // transfer token to user
-        saleToken.safeTransfer(sender, tokenAmount);
-        emit EmergencyUserWithdrawToken(sender, tokenAmount, block.timestamp);
+        address recipient = _transferToken(sender, tokenAmount);
+        emit SelfWithdrawToken(sender, recipient, tokenAmount, block.timestamp);
     }
 
     /// @dev emergency to allow owner withdraw eth or tokens inside the contract
@@ -330,6 +337,13 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             token.safeTransfer(msg.sender, amount);
         }
         emit EmergencyOwnerWithdraw(msg.sender, token, amount);
+    }
+
+    /// @dev only in case user has lost their wallet, or wrongly send eth from third party platforms
+    function updateUserTokenRecipient(address user, address recipient) external onlyOwner {
+        require(recipient != address(0), "invalid recipient");
+        userSwapData[user].tokenRecipient = recipient;
+        emit UpdatedTokenRecipient(user, recipient);
     }
 
     /// ================ GETTERS ====================
@@ -371,6 +385,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
     function getUserSwapData(address user)
         external view 
         returns (
+            address tokenRecipient,
             uint256 totalEthAmount,
             uint128 totalTokenAmount,
             uint128 distributedAmount,
@@ -382,6 +397,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             uint16[] memory daysIDs
         )
     {
+        tokenRecipient = _getRecipient(user);
         totalEthAmount = userSwapData[user].eAmount;
         totalTokenAmount = userSwapData[user].tAmount;
         distributedAmount = userSwapData[user].dAmount;
@@ -422,6 +438,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             uint256 totalDistributingAmount,
             uint256[] memory selectedIds,
             address[] memory users,
+            address[] memory recipients,
             uint128[] memory distributingAmounts,
             uint16[] memory daysIDs
         )
@@ -437,6 +454,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
         // return data that will be used to distribute
         selectedIds = new uint256[](totalUsers);
         users = new address[](totalUsers);
+        recipients = new address[](totalUsers);
         distributingAmounts = new uint128[](totalUsers);
         daysIDs = new uint16[](totalUsers);
 
@@ -446,6 +464,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             if (listSwaps[i].daysID == daysID && listSwaps[i].tAmount > listSwaps[i].dAmount) {
                 selectedIds[counter] = i;
                 users[counter] = data.user;
+                recipients[counter] = _getRecipient(data.user);
                 // don't need to use SafeMath here
                 distributingAmounts[counter] = data.tAmount * percentage / 100;
                 require(
@@ -480,6 +499,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             uint256 totalDistributingAmount,
             uint256[] memory selectedIds,
             address[] memory users,
+            address[] memory recipients,
             uint128[] memory distributingAmounts,
             uint16[] memory daysIDs
         )
@@ -494,6 +514,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
         // return data that will be used to distribute
         selectedIds = new uint256[](totalUsers);
         users = new address[](totalUsers);
+        recipients = new address[](totalUsers);
         distributingAmounts = new uint128[](totalUsers);
         daysIDs = new uint16[](totalUsers);
 
@@ -503,6 +524,7 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
             SwapData memory data = listSwaps[ids[i]];
             selectedIds[counter] = ids[i];
             users[counter] = data.user;
+            recipients[counter] = _getRecipient(data.user);
             // don't need to use SafeMath here
             distributingAmounts[counter] = data.tAmount * percentage / 100;
             require(
@@ -546,8 +568,22 @@ contract SeedSwap is ISeedSwap, WhitelistExtension, ReentrancyGuard {
         // increase distributed amount for user, no overflow, so don't need to use SafeMath here
         userSwapData[data.user].dAmount += uint128(distributingAmount);
         // send token to user's wallet
-        saleToken.safeTransfer(data.user, distributingAmount);
-        emit Distributed(data.user, distributingAmount, percentage, block.timestamp);
+        address recipient = _transferToken(data.user, distributingAmount);
+        emit Distributed(data.user, recipient, distributingAmount, percentage, block.timestamp);
+    }
+
+    function _transferToken(address user, uint256 amount) internal returns (address recipient) {
+        recipient = _getRecipient(user);
+        // safe check
+        assert(recipient != address(0));
+        saleToken.safeTransfer(recipient, amount);
+    }
+
+    function _getRecipient(address user) internal view returns(address recipient) {
+        recipient = userSwapData[user].tokenRecipient;
+        if (recipient == address(0)) {
+            recipient = user;
+        }
     }
 
     /// @dev return received tokenAmount given ethAmount
