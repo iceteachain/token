@@ -5,7 +5,7 @@ const MockTestSeedSwap = artifacts.require('MockTestSeedSwap.sol');
 const BN = web3.utils.BN;
 
 const Helper = require('./helper');
-const { ethAddress, address0, zeroAddress } = require('./helper');
+const { ethAddress, address0 } = require('./helper');
 const {expectRevert, expectEvent} = require('@openzeppelin/test-helpers');
 
 let teaToken;
@@ -163,7 +163,7 @@ contract('SeedSwap', accounts => {
         await expectRevertWithMessage(user, ethAmount, "onlyCanSwap: sender is not whitelisted");
       });
 
-      it(`Test not enough token when hardcap reached`, async() => {
+      it(`Test can buy token when hardcap reached`, async() => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
@@ -179,9 +179,7 @@ contract('SeedSwap', accounts => {
         let tokenAmount = ethAmount.mul((await seedSwap.saleRate())).mul(new BN(3)).div(new BN(2));
         await teaToken.transfer(seedSwap.address, tokenAmount, { from: owner });
         await seedSwap.swapEthToToken({ value: ethAmount.sub(new BN(1)), from: user });
-        await expectRevertWithMessage(user, ethAmount, "capSwap: not enough token to swap");
-        // still can swap with smaller amount
-        await seedSwap.swapEthToToken({ value: ethAmount.div(new BN(2)), from: owner });
+        await seedSwap.swapEthToToken({ value: ethAmount, from: owner });
       });
 
       it(`Test pause`, async() => {
@@ -206,7 +204,6 @@ contract('SeedSwap', accounts => {
       Helper.assertEqual(first.eAmount, second.eAmount);
       Helper.assertEqual(first.tAmount, second.tAmount);
       Helper.assertEqual(first.dAmount, second.dAmount);
-      Helper.assertEqual(first.timestamp, second.timestamp);
       Helper.assertEqual(first.daysID, second.daysID);
     }
 
@@ -232,14 +229,12 @@ contract('SeedSwap', accounts => {
       Helper.assertEqual(userData.ids.length, data.ethAmounts.length);
       Helper.assertEqual(userData.ids.length, data.tokenAmounts.length);
       Helper.assertEqual(userData.ids.length, data.distributedAmounts.length);
-      Helper.assertEqual(userData.ids.length, data.timestamps.length);
       Helper.assertEqual(userData.ids.length, data.daysIDs.length);
       for(let j = 0; j < userData.ids.length; j++) {
         let object = swapObjects[userData.ids[j]];
         Helper.assertEqual(object.eAmount, data.ethAmounts[j]);
         Helper.assertEqual(object.tAmount, data.tokenAmounts[j]);
         Helper.assertEqual(object.dAmount, data.distributedAmounts[j]);
-        Helper.assertEqual(object.timestamp, data.timestamps[j]);
         Helper.assertEqual(object.daysID, data.daysIDs[j]);
       }
     }
@@ -312,8 +307,9 @@ contract('SeedSwap', accounts => {
 
           /// verify data
           Helper.assertEqual(ethAmount, balanceEthAfter.sub(balanceEthBefore), "eth is not received correctly");
-          Helper.assertEqual(currentEthSwapped, await seedSwap.totalSwappedEth(), "total eth is not recorded correctly");
-          Helper.assertEqual(currentTokenSwapped, await seedSwap.totalSwappedToken(), "total token is not recorded correctly");
+          let totalData = await seedSwap.totalData();
+          Helper.assertEqual(currentEthSwapped, totalData.eAmount, "total eth is not recorded correctly");
+          Helper.assertEqual(currentTokenSwapped, totalData.tAmount, "total token is not recorded correctly");
           Helper.assertEqual(new BN(0), await seedSwap.totalDistributedToken());
           Helper.assertEqual(swapObjects.length, await seedSwap.getNumberSwaps(), "number swaps is wrong");
 
@@ -349,8 +345,9 @@ contract('SeedSwap', accounts => {
           currentEthSwapped.iadd(ethAmount);
           currentTokenSwapped.iadd(expectedTokenAmount);
 
-          Helper.assertEqual(currentEthSwapped, await seedSwap.totalSwappedEth(), "total eth is not recorded correctly");
-          Helper.assertEqual(currentTokenSwapped, await seedSwap.totalSwappedToken(), "total token is not recorded correctly");
+          let totalData = await seedSwap.totalData();
+          Helper.assertEqual(currentEthSwapped, totalData.eAmount, "total eth is not recorded correctly");
+          Helper.assertEqual(currentTokenSwapped, totalData.tAmount, "total token is not recorded correctly");
 
           let numberObject = await seedSwap.getNumberSwaps();
           let data = await seedSwap.listSwaps(numberObject * 1 - 1);
@@ -419,7 +416,6 @@ contract('SeedSwap', accounts => {
           allSwaps.tokenAmounts[i]
         );
         object.dAmount = allSwaps.distributedAmounts[i];
-        object.timestamp = allSwaps.timestamps[i];
         object.daysID = allSwaps.daysIDs[i];
         checkSwapObjectEqual(swapObjects[i], object);
       }
@@ -442,7 +438,7 @@ contract('SeedSwap', accounts => {
       // add distributed amount to user, and user's token balance
       userData[user].dAmount = userData[user].dAmount.add(amount);
       let recipient = userData[user].tokenRecipient;
-      if (recipient == zeroAddress) {
+      if (recipient == address0) {
         recipient = user;
         userData[user].tokenRecipient = recipient;
       }
@@ -485,7 +481,7 @@ contract('SeedSwap', accounts => {
       it(`Test distributeAll`, async() => {
         await makeSomeSwapsAndCheckData(40);
         await delayToEndTime();
-        let totalTokens = await seedSwap.totalSwappedToken();
+        let totalTokens = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokens, { from: owner });
         userTokenBalances[owner] = userTokenBalances[owner].sub(totalTokens);
         totalDistributed = new BN(0);
@@ -520,7 +516,7 @@ contract('SeedSwap', accounts => {
       it(`Test distributeBatch`, async() => {
         await makeSomeSwapsAndCheckData(40);
         await delayToEndTime();
-        let totalTokens = await seedSwap.totalSwappedToken();
+        let totalTokens = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokens, { from: owner });
         userTokenBalances[owner] = userTokenBalances[owner].sub(totalTokens);
         totalDistributed = new BN(0);
@@ -569,7 +565,7 @@ contract('SeedSwap', accounts => {
         await Helper.delayChainTime(time * 1 - currentTime);
 
         // not enough token balance for withdrawal
-        let totalTokens = await seedSwap.totalSwappedToken();
+        let totalTokens = (await seedSwap.totalData()).tAmount;
 
         for(let i = 0; i < accounts.length; i++) {
           let sender = accounts[i];
@@ -794,7 +790,7 @@ contract('SeedSwap', accounts => {
         // transfer enough token
         await teaToken.transfer(
           seedSwap.address,
-          await seedSwap.totalSwappedToken(),
+          (await seedSwap.totalData()).tAmount,
           { from: owner }
         );
         // test distribute safeNumbers orders
@@ -811,10 +807,14 @@ contract('SeedSwap', accounts => {
           seedSwap.updateUserTokenRecipient(accounts[0], accounts[3], { from: accounts[0] }),
           "Ownable: caller is not the owner"
         );
+        await expectRevert(
+          seedSwap.updateUserTokenRecipient(accounts[0], address0, { from: owner }),
+          "invalid recipient"
+        );
         await seedSwap.updateUserTokenRecipient(accounts[0], accounts[3], { from: owner });
 
         // transfer token to contract
-        await teaToken.transfer(seedSwap.address, await seedSwap.totalSwappedToken(), { from: owner });
+        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
         let balanceBefore = await teaToken.balanceOf(accounts[3]);
         let swapData = await seedSwap.listSwaps(0);
@@ -839,7 +839,7 @@ contract('SeedSwap', accounts => {
 
         await seedSwap.updateUserTokenRecipient(accounts[0], accounts[3], { from: owner });
         // transfer token to contract
-        await teaToken.transfer(seedSwap.address, await seedSwap.totalSwappedToken(), { from: owner });
+        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
         let balanceBefore = await teaToken.balanceOf(accounts[3]);
         let swapData = await seedSwap.listSwaps(0);
@@ -877,7 +877,7 @@ contract('SeedSwap', accounts => {
         let safeNumber = await seedSwap.SAFE_DISTRIBUTE_NUMBER();
         await makeSomeSwapsAndCheckData(safeNumber * 2);
         await delayToEndTime();
-        let totalTokenAmount = await seedSwap.totalSwappedToken();
+        let totalTokenAmount = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         let numLoops = 10;
@@ -931,7 +931,7 @@ contract('SeedSwap', accounts => {
         let numberSwaps = 10;
         await makeSomeSwapsAndCheckData(numberSwaps);
         await delayToEndTime();
-        let totalTokenAmount = await seedSwap.totalSwappedToken();
+        let totalTokenAmount = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         for(let i = 0; i < numberSwaps; i++) {
@@ -976,7 +976,7 @@ contract('SeedSwap', accounts => {
           "Estimate: not enough token balance"
         );
 
-        await teaToken.transfer(seedSwap.address, await seedSwap.totalSwappedToken(), { from: owner });
+        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
         for(let i = 0; i < swapObjects.length; i++) {
           let daysID = swapObjects[i].daysID;
@@ -995,7 +995,7 @@ contract('SeedSwap', accounts => {
         let safeNumber = await seedSwap.SAFE_DISTRIBUTE_NUMBER();
         await makeSomeSwapsAndCheckData(safeNumber * 2);
         await delayToEndTime();
-        let totalTokenAmount = await seedSwap.totalSwappedToken();
+        let totalTokenAmount = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         let numLoops = 10;
@@ -1052,7 +1052,7 @@ contract('SeedSwap', accounts => {
         let numberSwaps = 10;
         await makeSomeSwapsAndCheckData(numberSwaps);
         await delayToEndTime();
-        let totalTokenAmount = await seedSwap.totalSwappedToken();
+        let totalTokenAmount = (await seedSwap.totalData()).tAmount;
         await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
         let batches = [];
         for(let i = 0; i < swapObjects.length; i++) {
@@ -1187,6 +1187,21 @@ contract('SeedSwap', accounts => {
       });
       Helper.assertEqual(newStartTime, await seedSwap.saleStartTime());
       Helper.assertEqual(newEndTime, await seedSwap.saleEndTime());
+
+      // update sale time start is 0
+      currentTime = new BN(await Helper.currentBlockTime());
+      newEndTime = currentTime.add(new BN(200));
+      await seedSwap.updateSaleTimes(new BN(0), newEndTime, { from: owner });
+      Helper.assertEqual(newStartTime, await seedSwap.saleStartTime());
+      Helper.assertEqual(newEndTime, await seedSwap.saleEndTime());
+
+      // update sale time end is 0
+      currentTime = new BN(await Helper.currentBlockTime());
+      newStartTime = currentTime.add(new BN(50));
+      await seedSwap.updateSaleTimes(newStartTime, new BN(0), { from: owner });
+      Helper.assertEqual(newStartTime, await seedSwap.saleStartTime());
+      Helper.assertEqual(newEndTime, await seedSwap.saleEndTime());
+
       // delay to start time
       await Helper.delayChainTime(100);
       // check can not update after started

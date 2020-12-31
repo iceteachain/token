@@ -18,7 +18,7 @@ async function main() {
   deployer = accounts[0];
   console.log(`Deployer address at ${deployer}`);
 
-  gasPrice = new BN(2).mul(new BN(10).pow(new BN(9)));
+  gasPrice = new BN(10).mul(new BN(10).pow(new BN(9)));
   console.log(`Sending transactions with gas price: ${gasPrice.toString(10)} (${gasPrice.div(new BN(10).pow(new BN(9))).toString(10)} gweis)`);
 
   if (tokenAddress == undefined) {
@@ -54,8 +54,9 @@ async function main() {
   // NOTE: Please change the sale start time and end time in the SeedSwap contract
   // so that it could be started right after the contract is deployed.
 
-  // await seedSwap.swapEthToToken({ value: new BN(10).pow(new BN(16)), gasPrice: gasPrice });
-  // await Helper.transferEth(deployer, seedSwapAddress, new BN(10).pow(new BN(16)));
+  let minCap = await seedSwap.MIN_INDIVIDUAL_CAP();
+  await seedSwap.swapEthToToken({ value: minCap, gasPrice: gasPrice });
+  await Helper.transferEth(deployer, seedSwapAddress, minCap);
   // await Helper.transferEth(deployer, "0xc783df8a850f42e7f7e57013759c285caa701eb6", (new BN(5)).mul(new BN(10).pow(new BN(17))));
   // await Helper.transferEth(deployer, "0xead9c93b79ae7c1591b1fb5323bd777e86e150d4", (new BN(5)).mul(new BN(10).pow(new BN(17))));
 
