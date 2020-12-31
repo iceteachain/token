@@ -161,8 +161,6 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
             _addWhitelistAdmin(_owner);
             transferOwnership(_owner);
         }
-        saleStartTime = block.timestamp;
-        saleEndTime = block.timestamp + 2 hours;
     }
 
     function () external payable {
