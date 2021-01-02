@@ -7,9 +7,9 @@ const SeedSwap = artifacts.require('SeedSwap.sol');
 const Helper = require('../tests/helper');
 
 let token;
-let tokenAddress;// = "0x67362c384ed5724F79CB37218A2063B9A511Bc40";// = '0xb95fa86b07475ba55c0719085d5cae91c2af48cb';
+let tokenAddress = "0xB5250bf6FC6eF2eff51cDb2a6c19c769b403af81";// = "0x67362c384ed5724F79CB37218A2063B9A511Bc40";// = '0xb95fa86b07475ba55c0719085d5cae91c2af48cb';
 let seedSwap;
-let seedSwapAddress;// = "0xC4Dd0fE47e70B6F3CC4130c7a9b56116375a7246"; // = "0xdB3C74A0b900D55e328FF34663cC924a7BfA3988";
+let seedSwapAddress = "0x6899B2874C5494cE35bbc8BDA41bc66Dc2C2B0b1"// = "0xC4Dd0fE47e70B6F3CC4130c7a9b56116375a7246"; // = "0xdB3C74A0b900D55e328FF34663cC924a7BfA3988";
 
 let deployer;
 
@@ -18,7 +18,7 @@ async function main() {
   deployer = accounts[0];
   console.log(`Deployer address at ${deployer}`);
 
-  gasPrice = new BN(10).mul(new BN(10).pow(new BN(9)));
+  gasPrice = new BN(20).mul(new BN(10).pow(new BN(9)));
   console.log(`Sending transactions with gas price: ${gasPrice.toString(10)} (${gasPrice.div(new BN(10).pow(new BN(9))).toString(10)} gweis)`);
 
   if (tokenAddress == undefined) {
@@ -39,9 +39,8 @@ async function main() {
     console.log(`Interacting seed swap at ${seedSwapAddress}`);
   }
 
-  // let tokenAmount = (await seedSwap.HARD_CAP()).mul((await seedSwap.saleRate())).mul(new BN(2));
-  // await token.transfer(seedSwap.address, tokenAmount, { gasPrice: gasPrice });
-  // console.log(`Transferred token to crowdsale`);
+  await seedSwap.distributeAll(50, 0, { from: deployer });
+  await seedSwap.distributeAll(50, 0, { from: deployer });
 
   // let addresses = [
   //   deployer,
@@ -54,8 +53,13 @@ async function main() {
   // NOTE: Please change the sale start time and end time in the SeedSwap contract
   // so that it could be started right after the contract is deployed.
 
-  // let minCap = await seedSwap.MIN_INDIVIDUAL_CAP();
-  // await seedSwap.swapEthToToken({ value: minCap, gasPrice: gasPrice });
+  // let minCap = new BN(10).pow(new BN(18));
+  // for(let i = 0; i < 10; i++) {
+  //   await seedSwap.swapEthToToken({ value: minCap, gasPrice: gasPrice });
+  // }
+  // let tokenAmount = (await seedSwap.totalData()).tAmount;
+  // await token.transfer(seedSwap.address, tokenAmount, { gasPrice: gasPrice });
+  // console.log(`Transferred token to crowdsale`);
   // await Helper.transferEth(deployer, seedSwapAddress, minCap);
   // await Helper.transferEth(deployer, "0xc783df8a850f42e7f7e57013759c285caa701eb6", (new BN(5)).mul(new BN(10).pow(new BN(17))));
   // await Helper.transferEth(deployer, "0xead9c93b79ae7c1591b1fb5323bd777e86e150d4", (new BN(5)).mul(new BN(10).pow(new BN(17))));

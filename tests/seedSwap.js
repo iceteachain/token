@@ -1142,7 +1142,7 @@ contract('SeedSwap', accounts => {
   describe('Test update default values', async () => {
     let defaultSaleStart = new BN(1609729200);
     let defaultSaleEnd = new BN(1610384340);
-    let defaultRate = new BN(20000);
+    let defaultRate = new BN(25000);
     let defaultRecipient;
     before('init data and contracts', async () => {
       deployer = accounts[0];
@@ -1230,6 +1230,14 @@ contract('SeedSwap', accounts => {
       await expectRevert(
         seedSwap.updateSaleRate(newRate, { from : owner }),
         "Rates: new rate too high"
+      );
+      // new rate is higher than max uint80 / max individual cap
+      let maxCap = await seedSwap.MAX_INDIVIDUAL_CAP();
+      let maxUint80 = (new BN(2).pow(new BN(79))).sub(new BN(1));
+      newRate = maxUint80.div(maxCap).add(new BN(1))
+      await expectRevert(
+        seedSwap.updateSaleRate(newRate, { from : owner }),
+        "Rates: new rate is out of range"
       );
       // update with lower rate, check event & data changes
       newRate = defaultRate.div(new BN(2));
