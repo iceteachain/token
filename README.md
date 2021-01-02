@@ -44,6 +44,23 @@ INFURA_API_KEY=********************************
 - Run `./coverage.sh` for coverage on files
 
 
+### Deploy 
+1. Use Hardhat
+- TeaToken: `npx hardhat run --network {ropsten, mainnet} deployment/teaTokenDeployer.js`
+- SeedSwap: `npx hardhat run --network {ropsten, mainnet} deployment/seedSwapDeployer.js`
+2. Flatten file
+- Install flatten plugin for VS code, then flatten TeaToken and SeedSwap files, copy files to Remix and deploy. 
+
+
+### Verify
+1. Use Hardhat
+- TeaToken: `npx hardhat verify --network {ropsten, mainnet} {owner_address} {contract_address}`
+- SeedSwap:
+    + replace owner and tea token value in `deployment/seedSwapParams.js`
+    + `npx hardhat verify --network {ropsten, mainnet} --constructor_args deployment/seedSwapParams.js {contract_address}`
+2. Flatten file
+- Go to etherscan and copy flatten files to verify manually
+
 ## Interaction
 
 ### Owner
@@ -70,7 +87,7 @@ INFURA_API_KEY=********************************
 
 ### Update data
 1. `updateSaleTimes(startTime, endTime)`: Update sale times, only `owner` can call this function to update new start and end time, only when it is not started yet.
-2. `updateSaleRate(newSaleRate)`: Update sale rate, only `owner` can call this function to update new sale rate.
+2. `updateSaleRate(newSaleRate)`: Update sale rate, only `owner` can call this function to update new sale rate. saleRate must be lower than max_uint80 / MAX_INDIVIDUAL_CAP.
 3. `updateEthRecipientAddress(address)`: Update eth recipient, only `owner` can call this function to update new eth recipient address, default is `owner`.
 4. pause/unpause: `pause()` or `unpause()` only admin can call these functions to pause or unpause. Default is not paused.
 
@@ -116,8 +133,7 @@ Only can call distribute after sale is ended and it is not paused.
 6. `getNumberSwaps()`: Return number of swaps from all users.
 7. `getAllSwaps()`: Return all swaps data.
 8. `listSwaps(index)`: Return data of a single swap.
-9. `totalSwappedEth()`: Return total eth has been received.
-10. `totalSwappedToken()`: Return total token that should be distributed.
+9. `totalData()`: Return total eth and token amount from all swaps.
 11. `totalDistributedToken()`: Return total distributed token amount.
 12. `getUserSwapData(user)`: Return data of an user.
 13. `estimateDistributedAllData(percentage, daysID)`: Estimate distribute all.
@@ -127,6 +143,7 @@ Only can call distribute after sale is ended and it is not paused.
     - Return info of swap orders that will be distributed.
     - `isSafe` safe if the number of orders <= SAFE_DISTRIBUTE_NUMBER (default: 150).
 15. `isPaused()`: check if it is paused.
+16. `getSettingsData()`: return settings data like start/end times, rate, eth recipient.
 4. Some constants: `HARD_CAP()`, `MAX_INDIVIDUAL_CAP()`, `MIN_INDIVIDUAL_CAP()`, `SAFE_DISTRIBUTE_NUMBER()`, `WITHDRAWAL_DEADLINE()`, `DISTRIBUTE_PERIOD_UNIT()`
 
 
@@ -134,20 +151,14 @@ Only can call distribute after sale is ended and it is not paused.
 ```
     struct SwapData {
         address user;
-        uint128 eAmount;    // eth amount
-        uint128 tAmount;    // bought token amount
-        uint128 dAmount;    // distributed token amount
-        uint112 timestamp;
+        uint80 eAmount;    // eth amount
+        uint80 tAmount;    // bought token amount
+        uint80 dAmount;    // distributed token amount
         uint16 daysID;
     }
 ```
 
 ### User data
 ```
-    struct UserSwapData {
-        uint128 eAmount;    // total eth
-        uint128 tAmount;    // total bought token
-        uint128 dAmount;    // total distributed token
-        uint256[] ids; // indices in the list all swaps
-    }
+    uint256[] ids // indices in the list all swaps
 ```

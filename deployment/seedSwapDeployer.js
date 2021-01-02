@@ -39,24 +39,24 @@ async function main() {
     console.log(`Interacting seed swap at ${seedSwapAddress}`);
   }
 
-  let tokenAmount = (await seedSwap.HARD_CAP()).mul((await seedSwap.saleRate())).mul(new BN(2));
-  await token.transfer(seedSwap.address, tokenAmount, { gasPrice: gasPrice });
-  console.log(`Transferred token to crowdsale`);
+  // let tokenAmount = (await seedSwap.HARD_CAP()).mul((await seedSwap.saleRate())).mul(new BN(2));
+  // await token.transfer(seedSwap.address, tokenAmount, { gasPrice: gasPrice });
+  // console.log(`Transferred token to crowdsale`);
 
-  let addresses = [
-    deployer,
-    "0xc783df8a850f42e7f7e57013759c285caa701eb6",
-    "0xead9c93b79ae7c1591b1fb5323bd777e86e150d4",
-  ];
-  await seedSwap.updateWhitelistedAdmins(addresses, true, { from: deployer, gasPrice: gasPrice });
-  await seedSwap.updateWhitelistedUsers(addresses, true, { from: deployer, gasPrice: gasPrice });
+  // let addresses = [
+  //   deployer,
+  //   "0xc783df8a850f42e7f7e57013759c285caa701eb6",
+  //   "0xead9c93b79ae7c1591b1fb5323bd777e86e150d4",
+  // ];
+  // await seedSwap.updateWhitelistedAdmins(addresses, true, { from: deployer, gasPrice: gasPrice });
+  // await seedSwap.updateWhitelistedUsers(addresses, true, { from: deployer, gasPrice: gasPrice });
 
   // NOTE: Please change the sale start time and end time in the SeedSwap contract
   // so that it could be started right after the contract is deployed.
 
-  let minCap = await seedSwap.MIN_INDIVIDUAL_CAP();
-  await seedSwap.swapEthToToken({ value: minCap, gasPrice: gasPrice });
-  await Helper.transferEth(deployer, seedSwapAddress, minCap);
+  // let minCap = await seedSwap.MIN_INDIVIDUAL_CAP();
+  // await seedSwap.swapEthToToken({ value: minCap, gasPrice: gasPrice });
+  // await Helper.transferEth(deployer, seedSwapAddress, minCap);
   // await Helper.transferEth(deployer, "0xc783df8a850f42e7f7e57013759c285caa701eb6", (new BN(5)).mul(new BN(10).pow(new BN(17))));
   // await Helper.transferEth(deployer, "0xead9c93b79ae7c1591b1fb5323bd777e86e150d4", (new BN(5)).mul(new BN(10).pow(new BN(17))));
 

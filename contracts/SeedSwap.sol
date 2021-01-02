@@ -19,6 +19,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     using SafeMath for uint80;
 
     IERC20  public constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    uint256 public constant MAX_UINT_80 = 2**79 - 1;
     uint256 public constant HARD_CAP = 400 ether;
     uint256 public constant MIN_INDIVIDUAL_CAP = 1 ether;
     uint256 public constant MAX_INDIVIDUAL_CAP = 10 ether;
@@ -187,6 +188,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
         // safe check rate not different more than 50% than the current rate
         require(_newsaleRate >= saleRate / 2, "Rates: new rate too low");
         require(_newsaleRate <= saleRate * 3 / 2, "Rates: new rate too high");
+        require(_newsaleRate < MAX_UINT_80 / MAX_INDIVIDUAL_CAP, "Rates: new rate too high");
 
         saleRate = _newsaleRate;
         emit UpdateSaleRate(_newsaleRate);
@@ -396,6 +398,21 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
             distributedAmounts[i] = listSwaps[swapDataIDs[i]].dAmount;
             daysIDs[i] = listSwaps[swapDataIDs[i]].daysID;
         }
+    }
+
+    function getSettingsData()
+        external view
+        returns(
+            uint256 _startTime,
+            uint256 _endTime,
+            uint256 _rate,
+            address _ethRecipient
+        )
+    {
+        _startTime = saleStartTime;
+        _endTime = saleEndTime;
+        _rate = saleRate;
+        _ethRecipient = ethRecipient;
     }
 
     /// @dev returns list of users and distributed amounts if user calls distributeAll function
