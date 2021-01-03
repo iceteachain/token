@@ -1251,10 +1251,9 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     /// @dev Conditions:
     /// 1. sale must be in progress
     /// 2. hard cap is not reached yet
-    /// 3. user's swap eth amount is within individual caps
+    /// 3. user's total swapped eth amount is within individual caps
     /// 4. user is whitelisted
-    /// 5. total user's eth amount is not higher than max user's cap
-    /// 6. if total eth amount after the swap is higher than hard cap, still allow
+    /// 5. if total eth amount after the swap is higher than hard cap, still allow
     /// Note: _paused is checked independently.
     modifier onlyCanSwap(uint256 ethAmount) {
         require(ethAmount > 0, "onlyCanSwap: amount is 0");
@@ -1318,10 +1317,13 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     function updateSaleRate(uint256 _newsaleRate)
         external whenNotEnded onlyOwner
     {
+        require(
+            _newsaleRate < MAX_UINT_80 / MAX_INDIVIDUAL_CAP,
+            "Rates: new rate is out of range"
+        );
         // safe check rate not different more than 50% than the current rate
         require(_newsaleRate >= saleRate / 2, "Rates: new rate too low");
         require(_newsaleRate <= saleRate * 3 / 2, "Rates: new rate too high");
-        require(_newsaleRate < MAX_UINT_80 / MAX_INDIVIDUAL_CAP, "Rates: new rate too high");
 
         saleRate = _newsaleRate;
         emit UpdateSaleRate(_newsaleRate);

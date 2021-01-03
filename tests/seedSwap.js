@@ -127,9 +127,12 @@ contract('SeedSwap', accounts => {
       it(`Test min/max user's cap`, async() => {
         await delayToStartTime();
         let minCap = await seedSwap.MIN_INDIVIDUAL_CAP();
-        await expectRevertWithMessage(owner, minCap.sub(new BN(1)), "onlyCanSwap: eth amount must be within individual cap");
+        await expectRevertWithMessage(owner, minCap.sub(new BN(1)), "onlyCanSwap: eth amount is lower than min individual cap");
         let maxCap = await seedSwap.MAX_INDIVIDUAL_CAP();
-        await expectRevertWithMessage(owner, maxCap.add(new BN(1)), "onlyCanSwap: eth amount must be within individual cap");
+        await expectRevertWithMessage(owner, maxCap.add(new BN(1)), "onlyCapSwap: max individual cap reached");
+        await seedSwap.swapEthToToken({ value: minCap, from: owner });
+        // now can swap lower than min cap after the first swap
+        await seedSwap.swapEthToToken({ value: minCap.sub(new BN(1)), from: owner });
         // check total swap is more than user's max cap
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
@@ -1140,7 +1143,7 @@ contract('SeedSwap', accounts => {
   });
 
   describe('Test update default values', async () => {
-    let defaultSaleStart = new BN(1609729200);
+    let defaultSaleStart = new BN(1609693200);
     let defaultSaleEnd = new BN(1610384340);
     let defaultRate = new BN(25000);
     let defaultRecipient;
