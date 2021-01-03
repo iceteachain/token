@@ -144,7 +144,7 @@ contract('SeedSwap', accounts => {
         await seedSwap.updateWhitelistedUsers(accounts, true, { from: owner });
         await delayToStartTime();
         await seedSwap.swapEthToToken({ from: user, value: ethAmount });
-        await expectRevertWithMessage(user, ethAmount, "capSwap: max individual cap reached");
+        await expectRevertWithMessage(user, ethAmount, "onlyCapSwap: max individual cap reached");
         // other user still can swap
         await seedSwap.swapEthToToken({ from: owner, value: ethAmount });
       });

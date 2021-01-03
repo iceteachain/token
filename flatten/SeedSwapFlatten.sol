@@ -1267,17 +1267,16 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
         address sender = msg.sender;
         // check whitelisted
         require(isWhitelisted(sender), "onlyCanSwap: sender is not whitelisted");
-        // check individual cap
-        require(
-            ethAmount >= MIN_INDIVIDUAL_CAP && ethAmount <= MAX_INDIVIDUAL_CAP,
-            "onlyCanSwap: eth amount must be within individual cap"
-        );
-        // check total user's swap eth amount <= max individual cap
-        // note: no overflow here as amount has been checked within user's caps
+        // check total user's swap eth amount is within individual cap
         (uint80 userEthAmount, ,) = _getUserSwappedAmount(sender);
+        uint256 totalEthAmount = ethAmount.add(uint256(userEthAmount));
         require(
-            ethAmount + userEthAmount <= MAX_INDIVIDUAL_CAP,
-            "capSwap: max individual cap reached"
+            totalEthAmount >= MIN_INDIVIDUAL_CAP,
+            "onlyCanSwap: eth amount is lower than min individual cap"
+        );
+        require(
+            totalEthAmount <= MAX_INDIVIDUAL_CAP,
+            "onlyCapSwap: max individual cap reached"
         );
         _;
     }
