@@ -11,7 +11,9 @@
     "t": "./tst.sh",
     "compile": "./cmp.sh",
     "c": "./cmp.sh",
-    "prettier": "./node_modules/.bin/prettier --write"
+    "prettier": "./node_modules/.bin/prettier --write",
+    "flat:token": "truffle-flattener ./contracts/token/TeaToken.sol > flatten/TeaTokenFlattern.sol",
+    "flat:seed": "truffle-flattener ./contracts/SeedSwap.sol > flatten/SeedSwapFlatten.sol"
   },
   "repository": {
     "type": "git",
