@@ -9,10 +9,10 @@
   "scripts": {
     "test": "./tst.sh",
     "t": "./tst.sh",
-    "compile": "./cmp.sh",
+    "compile": "./compile.sh",
     "c": "./cmp.sh",
     "prettier": "./node_modules/.bin/prettier --write",
-    "flat:token": "truffle-flattener ./contracts/token/TeaToken.sol > flatten/TeaTokenFlattern.sol",
+    "flat:token": "truffle-flattener ./contracts/token/TeaToken.sol > flatten/TeaTokenFlatten.sol",
     "flat:seed": "truffle-flattener ./contracts/SeedSwap.sol > flatten/SeedSwapFlatten.sol"
   },
   "repository": {
