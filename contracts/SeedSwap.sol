@@ -401,19 +401,25 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
         }
     }
 
-    function getSettingsData()
+    function getData()
         external view
         returns(
             uint256 _startTime,
             uint256 _endTime,
             uint256 _rate,
-            address _ethRecipient
+            address _ethRecipient,
+            uint128 _tAmount,
+            uint128 _eAmount,
+            uint256 _hardcap
         )
     {
         _startTime = saleStartTime;
         _endTime = saleEndTime;
         _rate = saleRate;
         _ethRecipient = ethRecipient;
+        _tAmount = totalData.tAmount;
+        _eAmount = totalData.eAmount;
+        _hardcap = HARD_CAP;
     }
 
     /// @dev returns list of users and distributed amounts if user calls distributeAll function
