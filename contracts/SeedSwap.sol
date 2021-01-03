@@ -20,7 +20,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
 
     IERC20  public constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 public constant MAX_UINT_80 = 2**79 - 1;
-    uint256 public constant HARD_CAP = 300 ether;
+    uint256 public constant HARD_CAP = 320 ether;
     uint256 public constant MIN_INDIVIDUAL_CAP = 1 ether;
     uint256 public constant MAX_INDIVIDUAL_CAP = 10 ether;
     // user can call to distribute tokens after WITHDRAWAL_DEADLINE + saleEndTime
@@ -31,7 +31,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     IERC20  public saleToken;
     uint256 public saleStartTime = 1609693200;  // 00:00:00, 4 Jan 2021 GMT+7
     uint256 public saleEndTime = 1610384340;    // 23:59:00, 11 Jan 2021 GMT+7
-    uint256 public saleRate = 27000;            // 1 eth = 27,000 token
+    uint256 public saleRate = 25000;            // 1 eth = 25,000 token
 
     // address to receive eth of presale, default owner
     address payable public ethRecipient;
@@ -149,7 +149,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     constructor(address payable _owner, IERC20 _token) public {
         require(_token != IERC20(0), "constructor: invalid token");
         // (safe) check timestamp
-        assert(block.timestamp < saleStartTime);
+        // assert(block.timestamp < saleStartTime);
         assert(saleStartTime < saleEndTime);
 
         saleToken = _token;
