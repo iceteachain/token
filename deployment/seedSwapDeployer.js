@@ -1,7 +1,7 @@
 const artifacts = require('hardhat').artifacts
 const BN = web3.utils.BN;
 
-const TeaToken = artifacts.require('TeaToken.sol');
+const PkfToken = artifacts.require('PkfToken.sol');
 const SeedSwap = artifacts.require('SeedSwap.sol');
 
 const Helper = require('../tests/helper');
@@ -22,12 +22,12 @@ async function main() {
   console.log(`Sending transactions with gas price: ${gasPrice.toString(10)} (${gasPrice.div(new BN(10).pow(new BN(9))).toString(10)} gweis)`);
 
   if (tokenAddress == undefined) {
-    token = await TeaToken.new(deployer, { gasPrice: gasPrice });
+    token = await PkfToken.new(deployer, { gasPrice: gasPrice });
     tokenAddress = token.address;
-    console.log(`Deployed tea token at ${tokenAddress}`);
+    console.log(`Deployed pkf token at ${tokenAddress}`);
   } else {
-    token = await TeaToken.at(tokenAddress);
-    console.log(`Interacting tea token at ${tokenAddress}`);
+    token = await PkfToken.at(tokenAddress);
+    console.log(`Interacting pkf token at ${tokenAddress}`);
   }
 
   if (seedSwapAddress == undefined) {

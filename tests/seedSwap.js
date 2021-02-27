@@ -1,4 +1,4 @@
-const TeaToken = artifacts.require('TeaToken.sol');
+const PkfToken = artifacts.require('PkfToken.sol');
 const SeedSwap = artifacts.require('SeedSwap.sol');
 const MockTestSeedSwap = artifacts.require('MockTestSeedSwap.sol');
 
@@ -8,7 +8,7 @@ const Helper = require('./helper');
 const { ethAddress, address0 } = require('./helper');
 const {expectRevert, expectEvent} = require('@openzeppelin/test-helpers');
 
-let teaToken;
+let pkfToken;
 let seedSwap;
 let deployer;
 let admin;
@@ -30,14 +30,14 @@ contract('SeedSwap', accounts => {
       admin = accounts[1];
       owner = accounts[2];
       user = accounts[3];
-      teaToken = await TeaToken.new(owner);
-      seedSwap = await SeedSwap.new(owner, teaToken.address, { from: deployer });
+      pkfToken = await PkfToken.new(owner);
+      seedSwap = await SeedSwap.new(owner, pkfToken.address, { from: deployer });
     });
 
     describe(`Test Constructor`, async() => {
       it(`Test data correct after deployed, owner != deployer`, async() => {
-        seedSwap = await SeedSwap.new(owner, teaToken.address, { from: deployer });
-        Helper.assertEqual(teaToken.address, await seedSwap.saleToken());
+        seedSwap = await SeedSwap.new(owner, pkfToken.address, { from: deployer });
+        Helper.assertEqual(pkfToken.address, await seedSwap.saleToken());
         Helper.assertEqual(owner, await seedSwap.owner());
         Helper.assertEqual(true, await seedSwap.isWhitelistAdmin(owner));
         // deployer is also an admin
@@ -47,7 +47,7 @@ contract('SeedSwap', accounts => {
       });
 
       it(`Test deploy with deployer == owner`, async() => {
-        seedSwap = await SeedSwap.new(owner, teaToken.address, { from: owner });
+        seedSwap = await SeedSwap.new(owner, pkfToken.address, { from: owner });
         Helper.assertEqual(owner, await seedSwap.owner());
         Helper.assertEqual(true, await seedSwap.isWhitelistAdmin(owner));
         Helper.assertEqual(owner, await seedSwap.ethRecipient());
@@ -80,7 +80,7 @@ contract('SeedSwap', accounts => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
-          teaToken.address,
+          pkfToken.address,
           currentTime.add(new BN(20)),  // start
           currentTime.add(new BN(60)), // end
           new BN(10).pow(new BN(16)),   // hard cap
@@ -137,7 +137,7 @@ contract('SeedSwap', accounts => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
-          teaToken.address,
+          pkfToken.address,
           currentTime.add(new BN(20)),  // start
           currentTime.add(new BN(60)), // end
           ethAmount.mul(new BN(2)),   // hard cap
@@ -170,7 +170,7 @@ contract('SeedSwap', accounts => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
-          teaToken.address,
+          pkfToken.address,
           currentTime.add(new BN(20)),  // start
           currentTime.add(new BN(60)), // end
           ethAmount,   // hard cap
@@ -180,7 +180,7 @@ contract('SeedSwap', accounts => {
         await seedSwap.updateWhitelistedUsers(accounts, true, { from: owner });
         await delayToStartTime();
         let tokenAmount = ethAmount.mul((await seedSwap.saleRate())).mul(new BN(3)).div(new BN(2));
-        await teaToken.transfer(seedSwap.address, tokenAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, tokenAmount, { from: owner });
         await seedSwap.swapEthToToken({ value: ethAmount.sub(new BN(1)), from: user });
         await seedSwap.swapEthToToken({ value: ethAmount, from: owner });
       });
@@ -247,7 +247,7 @@ contract('SeedSwap', accounts => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
-          teaToken.address,
+          pkfToken.address,
           currentTime.add(new BN(20)),  // start
           currentTime.add(new BN(3000)), // end
           new BN(10).pow(new BN(18)),   // hard cap
@@ -453,7 +453,7 @@ contract('SeedSwap', accounts => {
       let currentTime = new BN(await Helper.currentBlockTime());
       seedSwap = await MockTestSeedSwap.new(
         owner,
-        teaToken.address,
+        pkfToken.address,
         currentTime.add(new BN(20)),  // start
         currentTime.add(new BN(100)), // end
         new BN(10).pow(new BN(18)),   // hard cap
@@ -471,7 +471,7 @@ contract('SeedSwap', accounts => {
       totalDistributed = new BN(0);
       userTokenBalances = {};
       for(let i = 0; i < accounts.length; i++) {
-        userTokenBalances[accounts[i]] = await teaToken.balanceOf(accounts[i]);
+        userTokenBalances[accounts[i]] = await pkfToken.balanceOf(accounts[i]);
         userData[accounts[i]] = generateUserObject(accounts[i]);
       }
     }
@@ -485,7 +485,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(40);
         await delayToEndTime();
         let totalTokens = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokens, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokens, { from: owner });
         userTokenBalances[owner] = userTokenBalances[owner].sub(totalTokens);
         totalDistributed = new BN(0);
 
@@ -494,9 +494,9 @@ contract('SeedSwap', accounts => {
           // make sure total percentage <= 100
           let percentage = Helper.getRandomNumer(1, Math.floor(100 / numLoops));
           let daysID = Helper.getRandomNumer(0, 2);
-          let balanceBefore = await teaToken.balanceOf(seedSwap.address);
+          let balanceBefore = await pkfToken.balanceOf(seedSwap.address);
           await seedSwap.distributeAll(percentage, daysID, { from: admin });
-          let balanceAfter = await teaToken.balanceOf(seedSwap.address);
+          let balanceAfter = await pkfToken.balanceOf(seedSwap.address);
           let distributedAmount = new BN(0);
           for(let j = 0; j < swapObjects.length; j++) {
             if (swapObjects[j].daysID == daysID) {
@@ -511,7 +511,7 @@ contract('SeedSwap', accounts => {
             // check user data
             checkUserData(accounts[j], userData[accounts[j]], swapObjects);
             // check token balance
-            Helper.assertEqual(userTokenBalances[accounts[j]], await teaToken.balanceOf(accounts[j]));
+            Helper.assertEqual(userTokenBalances[accounts[j]], await pkfToken.balanceOf(accounts[j]));
           }
         }
       });
@@ -520,7 +520,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(40);
         await delayToEndTime();
         let totalTokens = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokens, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokens, { from: owner });
         userTokenBalances[owner] = userTokenBalances[owner].sub(totalTokens);
         totalDistributed = new BN(0);
 
@@ -534,9 +534,9 @@ contract('SeedSwap', accounts => {
               batches.push(j);
             }
           }
-          let balanceBefore = await teaToken.balanceOf(seedSwap.address);
+          let balanceBefore = await pkfToken.balanceOf(seedSwap.address);
           await seedSwap.distributeBatch(percentage, batches, { from: admin });
-          let balanceAfter = await teaToken.balanceOf(seedSwap.address);
+          let balanceAfter = await pkfToken.balanceOf(seedSwap.address);
           let distributedAmount = new BN(0);
           for(let j = 0; j < batches.length; j++) {
             let amount = await updateDataAfterDistributed(percentage, batches[j]);
@@ -549,7 +549,7 @@ contract('SeedSwap', accounts => {
             // check user data
             checkUserData(accounts[j], userData[accounts[j]], swapObjects);
             // check token balance
-            Helper.assertEqual(userTokenBalances[accounts[j]], await teaToken.balanceOf(accounts[j]));
+            Helper.assertEqual(userTokenBalances[accounts[j]], await pkfToken.balanceOf(accounts[j]));
           }
         }
       });
@@ -582,7 +582,7 @@ contract('SeedSwap', accounts => {
         }
 
         // transfer enough token to distribute
-        await teaToken.transfer(seedSwap.address, totalTokens, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokens, { from: owner });
 
         userTokenBalances[owner] = userTokenBalances[owner].sub(totalTokens);
         totalDistributed = new BN(0);
@@ -591,8 +591,8 @@ contract('SeedSwap', accounts => {
           let sender = accounts[i];
           let uAmount = userData[sender].tAmount.sub(userData[sender].dAmount);
           if (uAmount.gt(new BN(0))) {
-            let balanceBefore = await teaToken.balanceOf(seedSwap.address);
-            let userBefore = await teaToken.balanceOf(userData[sender].tokenRecipient);
+            let balanceBefore = await pkfToken.balanceOf(seedSwap.address);
+            let userBefore = await pkfToken.balanceOf(userData[sender].tokenRecipient);
             await seedSwap.selfWithdrawToken({ from: sender });
             userData[sender].dAmount = userData[sender].tAmount;
             for(let j = 0; j < userData[sender].ids.length; j++) {
@@ -600,8 +600,8 @@ contract('SeedSwap', accounts => {
               swapObjects[id].dAmount = swapObjects[id].tAmount;
               checkSwapObjectEqual(swapObjects[id], await seedSwap.listSwaps(id));
             }
-            let balanceAfter = await teaToken.balanceOf(seedSwap.address);
-            let userAfter = await teaToken.balanceOf(userData[sender].tokenRecipient);
+            let balanceAfter = await pkfToken.balanceOf(seedSwap.address);
+            let userAfter = await pkfToken.balanceOf(userData[sender].tokenRecipient);
             Helper.assertEqual(uAmount, balanceBefore.sub(balanceAfter));
             Helper.assertEqual(uAmount, userAfter.sub(userBefore));
             checkUserData(sender, userData[sender], swapObjects);
@@ -653,18 +653,18 @@ contract('SeedSwap', accounts => {
           "percentage out of range"
         );
 
-        // test not enough tea token
-        // withdraw all tea token if any
-        let teaBalance = await teaToken.balanceOf(seedSwap.address);
+        // test not enough pkf token
+        // withdraw all pkf token if any
+        let teaBalance = await pkfToken.balanceOf(seedSwap.address);
         if (teaBalance.gt(new BN(0))) {
-          await seedSwap.emergencyOwnerWithdraw(teaToken.address, teaBalance, { from: owner });
+          await seedSwap.emergencyOwnerWithdraw(pkfToken.address, teaBalance, { from: owner });
         }
         await expectRevert(
           seedSwap.distributeAll(100, 0, { from: admin }),
           "Distribute: not enough token to distribute"
         );
 
-        await teaToken.transfer(seedSwap.address, swapObjects[0].tAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, swapObjects[0].tAmount, { from: owner });
         await seedSwap.distributeAll(50, 0, { from: admin });
         // distribute more than 100^
         await expectRevert(
@@ -713,11 +713,11 @@ contract('SeedSwap', accounts => {
           "percentage out of range"
         );
 
-        // test not enough tea token
-        // withdraw all tea token if any
-        let teaBalance = await teaToken.balanceOf(seedSwap.address);
+        // test not enough pkf token
+        // withdraw all pkf token if any
+        let teaBalance = await pkfToken.balanceOf(seedSwap.address);
         if (teaBalance.gt(new BN(0))) {
-          await seedSwap.emergencyOwnerWithdraw(teaToken.address, teaBalance, { from: owner });
+          await seedSwap.emergencyOwnerWithdraw(pkfToken.address, teaBalance, { from: owner });
         }
         await expectRevert(
           seedSwap.distributeBatch(100, [0], { from: admin }),
@@ -725,7 +725,7 @@ contract('SeedSwap', accounts => {
         );
 
         // transfer enough token to distribute
-        await teaToken.transfer(
+        await pkfToken.transfer(
           seedSwap.address,
           swapObjects[0].tAmount.add(swapObjects[1].tAmount),
           { from: owner }
@@ -760,7 +760,7 @@ contract('SeedSwap', accounts => {
         let currentTime = new BN(await Helper.currentBlockTime());
         seedSwap = await MockTestSeedSwap.new(
           owner,
-          teaToken.address,
+          pkfToken.address,
           currentTime.add(new BN(20)),  // start
           currentTime.add(new BN(1000)), // end
           new BN(10).pow(new BN(30)),   // hard cap
@@ -791,7 +791,7 @@ contract('SeedSwap', accounts => {
 
         await delayToEndTime();
         // transfer enough token
-        await teaToken.transfer(
+        await pkfToken.transfer(
           seedSwap.address,
           (await seedSwap.totalData()).tAmount,
           { from: owner }
@@ -817,18 +817,18 @@ contract('SeedSwap', accounts => {
         await seedSwap.updateUserTokenRecipient(accounts[0], accounts[3], { from: owner });
 
         // transfer token to contract
-        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
-        let balanceBefore = await teaToken.balanceOf(accounts[3]);
+        let balanceBefore = await pkfToken.balanceOf(accounts[3]);
         let swapData = await seedSwap.listSwaps(0);
         await seedSwap.distributeAll(50, swapData.daysID, { from: admin });
         let expectedBalance = balanceBefore.add(swapData.tAmount.div(new BN(2)));
-        Helper.assertEqual(expectedBalance, await teaToken.balanceOf(accounts[3]));
+        Helper.assertEqual(expectedBalance, await pkfToken.balanceOf(accounts[3]));
 
         balanceBefore = expectedBalance;
         await seedSwap.distributeBatch(50, [0], { from: admin });
         expectedBalance = balanceBefore.add(swapData.tAmount.div(new BN(2)));
-        Helper.assertEqual(expectedBalance, await teaToken.balanceOf(accounts[3]));
+        Helper.assertEqual(expectedBalance, await pkfToken.balanceOf(accounts[3]));
       });
 
       it(`Test emergency withdraw owner changes token recipient`, async() => {
@@ -842,13 +842,13 @@ contract('SeedSwap', accounts => {
 
         await seedSwap.updateUserTokenRecipient(accounts[0], accounts[3], { from: owner });
         // transfer token to contract
-        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
-        let balanceBefore = await teaToken.balanceOf(accounts[3]);
+        let balanceBefore = await pkfToken.balanceOf(accounts[3]);
         let swapData = await seedSwap.listSwaps(0);
         await seedSwap.selfWithdrawToken({ from: accounts[0] });
         let expectedBalance = balanceBefore.add(swapData.tAmount);
-        Helper.assertEqual(expectedBalance, await teaToken.balanceOf(accounts[3]));
+        Helper.assertEqual(expectedBalance, await pkfToken.balanceOf(accounts[3]));
       });
     });
 
@@ -857,7 +857,7 @@ contract('SeedSwap', accounts => {
         deployer = accounts[0];
         admin = accounts[1];
         owner = accounts[2];
-        teaToken = await TeaToken.new(owner);
+        pkfToken = await PkfToken.new(owner);
       });
   
       beforeEach(`Before each test`, async() => {
@@ -881,7 +881,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(safeNumber * 2);
         await delayToEndTime();
         let totalTokenAmount = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         let numLoops = 10;
         for(let i = 0; i < numLoops; i++) {
@@ -935,7 +935,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(numberSwaps);
         await delayToEndTime();
         let totalTokenAmount = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         for(let i = 0; i < numberSwaps; i++) {
           await seedSwap.distributeAll(100, i, { from: admin });
@@ -979,7 +979,7 @@ contract('SeedSwap', accounts => {
           "Estimate: not enough token balance"
         );
 
-        await teaToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, (await seedSwap.totalData()).tAmount, { from: owner });
 
         for(let i = 0; i < swapObjects.length; i++) {
           let daysID = swapObjects[i].daysID;
@@ -999,7 +999,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(safeNumber * 2);
         await delayToEndTime();
         let totalTokenAmount = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
 
         let numLoops = 10;
         for(let i = 0; i < numLoops; i++) {
@@ -1056,7 +1056,7 @@ contract('SeedSwap', accounts => {
         await makeSomeSwapsAndCheckData(numberSwaps);
         await delayToEndTime();
         let totalTokenAmount = (await seedSwap.totalData()).tAmount;
-        await teaToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
+        await pkfToken.transfer(seedSwap.address, totalTokenAmount, { from: owner });
         let batches = [];
         for(let i = 0; i < swapObjects.length; i++) {
           batches.push(i);
@@ -1098,11 +1098,11 @@ contract('SeedSwap', accounts => {
           "percentage out of range"
         );
 
-        // test not enough tea token
-        // withdraw all tea token if any
-        let teaBalance = await teaToken.balanceOf(seedSwap.address);
+        // test not enough pkf token
+        // withdraw all pkf token if any
+        let teaBalance = await pkfToken.balanceOf(seedSwap.address);
         if (teaBalance.gt(new BN(0))) {
-          await seedSwap.emergencyOwnerWithdraw(teaToken.address, teaBalance, { from: owner });
+          await seedSwap.emergencyOwnerWithdraw(pkfToken.address, teaBalance, { from: owner });
         }
         await expectRevert(
           seedSwap.estimateDistributedBatchData(100, [0], { from: admin }),
@@ -1110,7 +1110,7 @@ contract('SeedSwap', accounts => {
         );
 
         // transfer enough token to distribute
-        await teaToken.transfer(
+        await pkfToken.transfer(
           seedSwap.address,
           swapObjects[0].tAmount.add(swapObjects[1].tAmount),
           { from: owner }
@@ -1151,11 +1151,11 @@ contract('SeedSwap', accounts => {
       deployer = accounts[0];
       admin = accounts[1];
       owner = accounts[2];
-      teaToken = await TeaToken.new(admin);
+      pkfToken = await PkfToken.new(admin);
     });
 
     beforeEach(`Before each test`, async() => {
-      seedSwap = await SeedSwap.new(owner, teaToken.address, { from: deployer });
+      seedSwap = await SeedSwap.new(owner, pkfToken.address, { from: deployer });
       await seedSwap.updateWhitelistedAdmins([admin], true, { from: owner });
     });
 
@@ -1295,8 +1295,8 @@ contract('SeedSwap', accounts => {
       admin = accounts[1];
       owner = accounts[2];
       user = accounts[3];
-      teaToken = await TeaToken.new(owner);
-      seedSwap = await SeedSwap.new(owner, teaToken.address, { from: deployer });
+      pkfToken = await PkfToken.new(owner);
+      seedSwap = await SeedSwap.new(owner, pkfToken.address, { from: deployer });
     });
 
     it(`Test pause`, async() => {
@@ -1401,14 +1401,14 @@ contract('SeedSwap', accounts => {
     // no way to transfer eth to contract without reverting
     it(`Test owner withdraw token`, async() => {
       let tokenAmount = new BN(10).pow(new BN(10));
-      await teaToken.transfer(seedSwap.address, tokenAmount, { from: owner });
-      ownerBal = await teaToken.balanceOf(owner);
+      await pkfToken.transfer(seedSwap.address, tokenAmount, { from: owner });
+      ownerBal = await pkfToken.balanceOf(owner);
       await expectRevert(
-        seedSwap.emergencyOwnerWithdraw(teaToken.address, tokenAmount, { from: user }),
+        seedSwap.emergencyOwnerWithdraw(pkfToken.address, tokenAmount, { from: user }),
         "Ownable: caller is not the owner"
       );
-      await seedSwap.emergencyOwnerWithdraw(teaToken.address, tokenAmount, { from: owner, gasPrice: new BN(0) });
-      newOwnerBal = await teaToken.balanceOf(owner);
+      await seedSwap.emergencyOwnerWithdraw(pkfToken.address, tokenAmount, { from: owner, gasPrice: new BN(0) });
+      newOwnerBal = await pkfToken.balanceOf(owner);
       Helper.assertEqual(tokenAmount, newOwnerBal.sub(ownerBal));
       // call withdraw eth even though there is no way to transfer eth to that contract
       await expectRevert(

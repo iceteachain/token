@@ -4,7 +4,7 @@
 [![Build Status](https://api.travis-ci.com/KyberNetwork/kyber_reserves_sc.svg?branch=master&status=passed)](https://travis-ci.com/github/KyberNetwork/kyber_reserves_sc)
 
 
-TeaToken and Crowdsale contracts.
+PkfToken and Crowdsale contracts.
 
 ## Package Manager
 We use `yarn` as the package manager. You may use `npm` and `npx` instead, but commands in bash scripts may have to be changed accordingly.
@@ -46,17 +46,17 @@ INFURA_API_KEY=********************************
 
 ### Deploy 
 1. Use Hardhat
-- TeaToken: `npx hardhat run --network {ropsten, mainnet} deployment/teaTokenDeployer.js`
+- PkfToken: `npx hardhat run --network {ropsten, mainnet} deployment/pkfTokenDeployer.js`
 - SeedSwap: `npx hardhat run --network {ropsten, mainnet} deployment/seedSwapDeployer.js`
 2. Flatten file
-- Install flatten plugin for VS code, then flatten TeaToken and SeedSwap files, copy files to Remix and deploy. 
+- Install flatten plugin for VS code, then flatten PkfToken and SeedSwap files, copy files to Remix and deploy. 
 
 
 ### Verify
 1. Use Hardhat
-- TeaToken: `npx hardhat verify --network {ropsten, mainnet} {owner_address} {contract_address}`
+- PkfToken: `npx hardhat verify --network {ropsten, mainnet} {owner_address} {contract_address}`
 - SeedSwap:
-    + replace owner and tea token value in `deployment/seedSwapParams.js`
+    + replace owner and pkf token value in `deployment/seedSwapParams.js`
     + `npx hardhat verify --network {ropsten, mainnet} --constructor_args deployment/seedSwapParams.js {contract_address}`
 2. Flatten file
 - Go to etherscan and copy flatten files to verify manually
@@ -120,7 +120,7 @@ Only can call distribute after sale is ended and it is not paused.
 
 ### Emergency user withdraw token
 - `selfWithdrawToken()`
-- User can withdraw TEA token after `WITHDRAWAL_DEADLINE` from `saleEndTime`.
+- User can withdraw PKF token after `WITHDRAWAL_DEADLINE` from `saleEndTime`.
 - All undistributed tokens will be transferred to user.
 
 

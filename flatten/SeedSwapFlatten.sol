@@ -1141,7 +1141,7 @@ pragma solidity 0.5.11;
 
 
 
-/// @dev SeedSwap contract for presale TEA token
+/// @dev SeedSwap contract for presale PKF token
 /// Some notations:
 /// dAmount - distributed token amount
 /// uAmount - undistributed token amount
@@ -1192,7 +1192,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
     mapping(address => uint256[]) public userSwapData;
     mapping(address => address) public userTokenRecipient;
 
-    event SwappedEthToTea(
+    event SwappedEthToPkf(
         address indexed trader,
         uint256 indexed ethAmount,
         uint256 indexed teaAmount,
@@ -1338,8 +1338,8 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
         emit UpdateEthRecipient(_newRecipient);
     }
 
-    /// ================ SWAP ETH TO TEA TOKEN ====================
-    /// @dev user can call this function to swap eth to TEA token
+    /// ================ SWAP ETH TO PKF TOKEN ====================
+    /// @dev user can call this function to swap eth to PKF token
     /// or just deposit eth directly to the contract
     function swapEthToToken()
         public payable
@@ -1377,7 +1377,7 @@ contract SeedSwap is WhitelistExtension, ReentrancyGuard {
         // transfer eth to recipient
         ethRecipient.transfer(ethAmount);
 
-        emit SwappedEthToTea(sender, ethAmount, tokenAmount, block.timestamp, uint16(daysID));
+        emit SwappedEthToPkf(sender, ethAmount, tokenAmount, block.timestamp, uint16(daysID));
     }
 
     /// ================ DISTRIBUTE TOKENS ====================
