@@ -1,7 +1,7 @@
 {
   "name": "token",
   "version": "1.0.0",
-  "description": "Main contracts for TeaToken and Crowdsale",
+  "description": "Main contracts for PkfToken and Crowdsale",
   "main": "truffle.js",
   "directories": {
     "test": "test"
@@ -12,7 +12,7 @@
     "compile": "./compile.sh",
     "c": "./cmp.sh",
     "prettier": "./node_modules/.bin/prettier --write",
-    "flat:token": "truffle-flattener ./contracts/token/TeaToken.sol > flatten/TeaTokenFlatten.sol",
+    "flat:token": "truffle-flattener ./contracts/token/PkfToken.sol > flatten/PkfTokenFlatten.sol",
     "flat:seed": "truffle-flattener ./contracts/SeedSwap.sol > flatten/SeedSwapFlatten.sol"
   },
   "repository": {

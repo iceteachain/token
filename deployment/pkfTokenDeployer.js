@@ -1,7 +1,7 @@
 const artifacts = require('hardhat').artifacts
 const BN = web3.utils.BN;
 
-const TeaToken = artifacts.require('TeaToken.sol');
+const PkfToken = artifacts.require('PkfToken.sol');
 
 let token;
 let tokenAddress;// = '0xb95fa86b07475ba55c0719085d5cae91c2af48cb';
@@ -17,18 +17,18 @@ async function main() {
   console.log(`Sending transactions with gas price: ${gasPrice.toString(10)} (${gasPrice.div(new BN(10).pow(new BN(9))).toString(10)} gweis)`);
 
   if (tokenAddress == undefined) {
-    token = await TeaToken.new(deployer);
+    token = await PkfToken.new(deployer);
     tokenAddress = token.address;
-    console.log(`Deployed tea token at ${tokenAddress}`);
+    console.log(`Deployed pkf token at ${tokenAddress}`);
   } else {
-    token = await TeaToken.at(tokenAddress);
-    console.log(`Interacting tea token at ${tokenAddress}`);
+    token = await PkfToken.at(tokenAddress);
+    console.log(`Interacting pkf token at ${tokenAddress}`);
   }
 
-  console.log(`Tea token balance: ${(await token.balanceOf(deployer)).toString(10)}`);
+  console.log(`PKF token balance: ${(await token.balanceOf(deployer)).toString(10)}`);
 
   await token.burn(new BN(10).pow(new BN(18)));
-  console.log(`Tea token balance: ${(await token.balanceOf(deployer)).toString(10)}`);
+  console.log(`PKF token balance: ${(await token.balanceOf(deployer)).toString(10)}`);
 }
 
 main()

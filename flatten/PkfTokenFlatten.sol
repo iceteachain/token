@@ -584,17 +584,17 @@ contract ERC20Burnable is Context, ERC20 {
     }
 }
 
-// File: contracts/token/TeaToken.sol
+// File: contracts/token/PkfToken.sol
 
 pragma solidity 0.5.11;
 
 
 
-contract TeaToken is ERC20Detailed, ERC20Burnable {
+contract PkfToken is ERC20Detailed, ERC20Burnable {
 
     uint256 public constant INITIAL_SUPPLY = 200 * 10**(6 + 18); // 200M tokens
 
-    constructor(address owner) public ERC20Detailed("TEA Token", "TEA", 18) {
+    constructor(address owner) public ERC20Detailed("PolkaFoundry", "PKF", 18) {
         _mint(owner, INITIAL_SUPPLY);
     }
 }
