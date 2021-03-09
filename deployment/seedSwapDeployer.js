@@ -7,9 +7,9 @@ const SeedSwap = artifacts.require('SeedSwap.sol');
 const Helper = require('../tests/helper');
 
 let token;
-let tokenAddress = "0xB5250bf6FC6eF2eff51cDb2a6c19c769b403af81";// = "0x67362c384ed5724F79CB37218A2063B9A511Bc40";// = '0xb95fa86b07475ba55c0719085d5cae91c2af48cb';
+let tokenAddress = "0xEa067670CEf5e72578Bc5001dD73d73E02BF6E5E";// = '0xb95fa86b07475ba55c0719085d5cae91c2af48cb';
 let seedSwap;
-let seedSwapAddress = "0x6899B2874C5494cE35bbc8BDA41bc66Dc2C2B0b1"// = "0xC4Dd0fE47e70B6F3CC4130c7a9b56116375a7246"; // = "0xdB3C74A0b900D55e328FF34663cC924a7BfA3988";
+let seedSwapAddress = "0xDDB866a373C2A4ccfa7c9c7227AB7eB22FE44878"; // = "0xdB3C74A0b900D55e328FF34663cC924a7BfA3988";
 
 let deployer;
 
